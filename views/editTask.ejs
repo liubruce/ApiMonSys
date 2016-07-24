@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css'/>
+</head>
+<body>
+<h1><%= title %></h1>
+
+<p>Welcome to <%= title %></p>
+
+<form action="/edittask" method='post' >
+    <input name="taskid" type="hidden" value=<%= rows[0].task_id %> >
+    <label>任务名称</label>
+    <input name="taskname" type="text" style="width:520px" value=<%= rows[0].task_name%> >
+    <br/><br/>
+    <label>任务描述</label>
+    <input name="taskdesc" type="text" style="width:520px" value=<%= rows[0].task_desc%> > </input>
+    <br/><br/>
+    <label>执行频率</label>
+    <input name="frequency" type="text" value=<%= rows[0].frequency %>>
+    <label>API 类别</label>
+    <input name="apitype" type="text" value=<%= rows[0].api_type %>>
+    <label>API 方法</label>
+    <input name="apimethod" type="text" value=<%= rows[0].api_method %>>
+    <br/><br/>
+    <label>API URL</label>
+    <input name="apiurl" type="text" style="width:520px" value=<%= rows[0].api_url%> >
+    <br/><br/>
+    <label for="enable">启用</label>
+    <% if (rows[0].status){%>
+    <input type="radio" name="status" value="1" checked="checked"/>
+    <label for="female">停用</label>
+    <input type="radio" name="status" value="0"  />
+    <%}else{ %>
+    <input type="radio" name="status" value="1" />
+    <label for="female">停用</label>
+    <input type="radio" name="status" value="0" checked="checked" />
+    <%} %>
+    <br/><br/>
+    <input type="submit" value="保存"/> <button type="button" onclick="javascript:window.location.href='/';">取消</button>
+</form>
+
+</body>
+</html>
