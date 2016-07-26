@@ -104,7 +104,7 @@ router.post('/', function (req, res) {
 function newSchedule(req){
     if (req.body.status == 1) {
         function exectask(apiurl, taskid) { //+ rows[i].frequency
-            callSoapApi(apiurl, taskid)
+            callSoapApi.execGet(apiurl, taskid);
         }
 
         var startTime = 0;

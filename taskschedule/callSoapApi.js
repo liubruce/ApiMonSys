@@ -11,15 +11,42 @@ var pubfunc = require("../service/pubfunctions");
 
 function createtablestr(tableSuffix){
     var createtablestr = "CREATE TABLE IF NOT EXISTS `apimonitordata" + tableSuffix + "` (" +
-        "`monitor_id` bigint(20) NOT NULL AUTO_INCREMENT,`create_time` bigint(20) NOT NULL," +
+        "`id` bigint(20) NOT NULL AUTO_INCREMENT,`create_time` bigint(20) NOT NULL," +
         "`response_time` float NOT NULL," +
         "`status` int(11) NOT NULL,`task_id` bigint(20) NOT NULL," +
-        "`availrate` bigint(20),`correctrate` bigint(20), PRIMARY KEY (`monitor_id`)" +
+        "`availrate` bigint(20),`correctrate` bigint(20),`monitorid` bigint(20), PRIMARY KEY (`id`)" +
         ") ENGINE=InnoDB AUTO_INCREMENT=15180 DEFAULT CHARSET=utf8;";
 
     return createtablestr;
 }
 
+
+function writeApiData(statusCode,responseTime,taskid, availrate, correctrate) {
+
+    var values = [new Date().getTime(), responseTime, statusCode, taskid, availrate, correctrate];
+
+    var connection = require('../database/dbsource.js');
+
+    //create_time   | response_time | status | task_id
+
+    var datestr = pubfunc.formatNow(new Date());
+    connection.query(createtablestr(datestr));
+    var insertSql = 'INSERT INTO apimonitordata' + datestr + ' SET create_time = ?, response_time = ? , ' +
+        'status = ?, task_id=?, availrate=?, correctrate=?';
+    //console.log(insertSql);
+    connection.query(insertSql, values,
+        function (error, results) {
+            if (error) {
+                console.log("Write API 监控数据错误 Error: " + error.message);
+                //connection.end();
+                return;
+            }
+            console.log('Inserted: ' + results.affectedRows + ' row.');
+            console.log('Id inserted: ' + results.insertId);
+        }
+    );
+    //GetData(client);
+}
 function execGet(apiurl, taskid) {
 
     var https = require('http');
@@ -63,37 +90,13 @@ function execGet(apiurl, taskid) {
             console.log('耗时 %d 秒' + ' ' + taskid, responseTime);
             //写入数据库
 
-            var writeApiData = function () {
-                if (res.statusCode >= 200 && res.statusCode < 300) {
-                 var availrate = 1, correctrate =1;
-                }else
-                    var availrate = 0, correctrate =0;
-                var values = [new Date().getTime(), responseTime, res.statusCode, taskid, availrate, correctrate];
 
-                var connection = require('../database/dbsource.js');
+            if (res.statusCode >= 200 && res.statusCode < 300) {
+                var availrate = 1, correctrate =1;
+            }else
+                var availrate = 0, correctrate =0;
 
-                //create_time   | response_time | status | task_id
-
-                var datestr = pubfunc.formatNow(new Date());
-                connection.query(createtablestr(datestr));
-                var insertSql = 'INSERT INTO apimonitordata' + datestr + ' SET create_time = ?, response_time = ? , ' +
-                    'status = ?, task_id=?, availrate=?, correctrate=?';
-                //console.log(insertSql);
-                connection.query(insertSql, values,
-                    function (error, results) {
-                        if (error) {
-                            console.log("Write API 监控数据错误 Error: " + error.message);
-                            //connection.end();
-                            return;
-                        }
-                        console.log('Inserted: ' + results.affectedRows + ' row.');
-                        console.log('Id inserted: ' + results.insertId);
-                    }
-                );
-                //GetData(client);
-            }
-
-            writeApiData();
+            writeApiData(res.statusCode,responseTime,taskid, availrate, correctrate);
 
             //schedule.job
             //console.log(`Benchmark took ${diff[0] * 1e9 + diff[1]} nanoseconds`);
@@ -115,8 +118,10 @@ function execGet(apiurl, taskid) {
 
     reqGet.end();
     reqGet.on('error', function (e) {
-        console.error(e);
-    });
+            writeApiData(0,0,taskid, 0, 0);
+            console.error('网络问题:' + e + ' statuscode：'); // + res.statusCode);
+        }
+    );
 
     console.log("调用结束 " + taskid);
 

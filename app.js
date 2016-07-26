@@ -1,7 +1,7 @@
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
-var logger = require('morgan');
+var loggermorgan = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
@@ -23,11 +23,12 @@ log4js.configure({
         {
             type: 'file', //文件输出
             filename: 'logs/access.log',
-            maxLogSize: 1024,
+            maxLogSize: 10240,
             backups: 3,
             category: 'normal'
         }
-    ]
+    ],
+    replaceConsole: true
 });
 var logger4js = log4js.getLogger('normal');
 logger4js.setLevel('INFO');
@@ -39,12 +40,21 @@ app.set('view engine', 'ejs');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(__dirname + '/public/favicon.ico'));
-app.use(logger('dev'));
+app.use(loggermorgan('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(log4js.connectLogger(logger4js, {level: log4js.levels.INFO}));
+//app.use(log4js.connectLogger(logger4js, {level: log4js.levels.INFO}));
+//调整日志输出格式
+//app.use(log4js.connectLogger(logger4js, {level:log4js.levels.INFO, format:':method :url'}));
+
+//app.use(log4js.connectLogger(logger4js, {level:log4js.levels.INFO, format:':method :url'}));
+
+var HTTP_LOG_FORMAT_DEV = ':method :url :status :response-time ms - :res[content-length]';
+app.use(log4js.connectLogger(logger4js, { level: 'auto', format: HTTP_LOG_FORMAT_DEV }));
+
+//app.use(log4js.connectLogger(logger4js, {level: 'auto', format:':method :url'}));
 
 app.use('/', routes);
 app.use('/edittask', editTask);

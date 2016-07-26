@@ -109,12 +109,9 @@ router.get('/open/available/:id', function (req, res, next) {
                     else {
                         newRows.push(rows);
                         caculateRows = caculateRows +1;
-                        console.log('caculateRows:' + caculateRows + ' datemax:' + datemax);
-                        console.log('selectstr' + selectStr);
+
                         if (caculateRows > datemax)
                         {
-                           // create_time, response_time status task_id availrate correctrate
-                            //i = 0;
                             res.json(newRows);
                         }
                     }

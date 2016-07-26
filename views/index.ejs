@@ -21,28 +21,28 @@
           <th>任务状态</th><th>任务编辑</th><th>删除任务</th>
       </tr>
 
-        <% for(var i=0; i<rows.length; i++){%>
+        <% rows.forEach(function(oneRow){%>
         <form action="/edittask" method='get'>
-            <input id="taskid" name="taskid" type="hidden" value=<%=rows[i].task_id%> />
+            <input id="taskid" name="taskid" type="hidden" value=<%=oneRow.task_id%> />
             <input id="action" name="action" type="hidden" value="edit" />
             <tr>
-                <td><%=rows[i].task_id%></td>
-                <td><%=rows[i].task_name%></td>
-                <td><%=rows[i].task_desc%></td>
-                <td><%=rows[i].frequency%></td>
-                <td><%=rows[i].api_type%></td>
-                <td><%=rows[i].api_method%></td>
-                <td><%=rows[i].api_url%></td>
-                <%if(schedule.scheduledJobs[rows[i].task_id]) {%>
+                <td><%=oneRow.task_id%></td>
+                <td><%=oneRow.task_name%></td>
+                <td><%=oneRow.task_desc%></td>
+                <td><%=oneRow.frequency%></td>
+                <td><%=oneRow.api_type%></td>
+                <td><%=oneRow.api_method%></td>
+                <td><%=oneRow.api_url%></td>
+                <%if(schedule.scheduledJobs[oneRow.task_id]) {%>
                 <td> 执行中 </td>
                 <% }else { %>
                 <td> 没有启动</td>
                 <% } %>
                 <td><input type="submit" value="修改"/></td>
-                <td><button type="button" onclick="javascript:delConfirm(<%=rows[i].task_id%>);">删除</button></td>
+                <td><button type="button" onclick="javascript:delConfirm(<%=oneRow.task_id%>);">删除</button></td>
             </tr>
         </form>
-        <%}%>
+        <%})%>
 
     </table>
   </body>

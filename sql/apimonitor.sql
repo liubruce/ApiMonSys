@@ -23,13 +23,14 @@ DROP TABLE IF EXISTS `apimonitordata`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `apimonitordata20160722` (
-  `monitor_id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `create_time` bigint(20) NOT NULL,
   `response_time` float NOT NULL,
   `status` int(11) NOT NULL,
   `task_id` bigint(20) NOT NULL,
   `availrate` tinyint(4),
   `correctrate` tinyint(4),
+  `monitorid` bigint(20),
   PRIMARY KEY (`monitor_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=15180 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -52,6 +53,8 @@ CREATE TABLE `taskapiinfo` (
   `task_desc` varchar(255) DEFAULT NULL,
   `task_name` varchar(255) DEFAULT NULL,
   `update_time` bigint(20) NOT NULL,
+  `monitorids` varchar(255),
+  `application_id` bigint(20),
   PRIMARY KEY (`task_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
