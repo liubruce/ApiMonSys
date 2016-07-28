@@ -14,24 +14,8 @@ var schedule = require('node-schedule');
 var taskconfig = require('./taskschedule/taskconfig.js');
 
 var callSoapApi = require('./taskschedule/callSoapApi');
+var log4js = require('./applog').logger;
 
-//增加日志输出 by Bruce
-var log4js = require('log4js');
-log4js.configure({
-    appenders: [
-        {type: 'console'}, //控制台输出
-        {
-            type: 'file', //文件输出
-            filename: 'logs/access.log',
-            maxLogSize: 10240,
-            backups: 3,
-            category: 'normal'
-        }
-    ],
-    replaceConsole: true
-});
-var logger4js = log4js.getLogger('normal');
-logger4js.setLevel('INFO');
 
 var app = express();
 // view engine setup
@@ -51,8 +35,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 //app.use(log4js.connectLogger(logger4js, {level:log4js.levels.INFO, format:':method :url'}));
 
-var HTTP_LOG_FORMAT_DEV = ':method :url :status :response-time ms - :res[content-length]';
-app.use(log4js.connectLogger(logger4js, { level: 'auto', format: HTTP_LOG_FORMAT_DEV }));
+//var HTTP_LOG_FORMAT_DEV = ':method :url :status :response-time ms - :res[content-length]';
+//app.use(log4js.connectLogger(logger4js, { level: 'auto', format: HTTP_LOG_FORMAT_DEV }));
+
+//log4js.debug("collectTime=%s",collectTime);
 
 //app.use(log4js.connectLogger(logger4js, {level: 'auto', format:':method :url'}));
 

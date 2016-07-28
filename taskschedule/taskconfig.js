@@ -4,6 +4,8 @@
 var callSoapApi = require('./callSoapApi');
 var connection = require('../database/dbsource.js');
 var pubfunc = require("../service/pubfunctions");
+var log4js = require('../applog').logger;
+
 
 function createApiMonitorTable() {
     var date = new Date();
@@ -15,7 +17,7 @@ function createApiMonitorTable() {
     //console.log(dateStr);
     connection.query(callSoapApi.createtablestr(dateStr));
 
-    console.log("create table apimonitordata" + dateStr + " success!")
+    log4js.debug("create table apimonitordata" + dateStr + " success!")
 }
 
 function createJobforCreateTable(schedule) {
@@ -66,10 +68,11 @@ function taskconfig(schedule) {
             }
             var rule = new schedule.RecurrenceRule();
             rule.minute = times;
-            startTime = startTime + 1;
-            if (startTime > 1) startTime = 0;
+            //startTime = startTime + 1;
+            //if (startTime > 1)
+            startTime = 0;
 
-            console.log('taskid=' + rows[i].task_id + ' ' + times);
+            log4js.debug('taskid=' + rows[i].task_id + ' ' + times);
             var oneJob = schedule.scheduleJob(rows[i].task_id.toString(), rule, //startTime.toString()+ '/' + rows[i].frequency + ' * * * * *'
                 function (taskid, apiurl) {
                     exectask(apiurl, taskid, connection)

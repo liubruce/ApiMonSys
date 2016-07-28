@@ -20,7 +20,7 @@ router.get('/open/taskLists.json', function (req, res, next) {
 
 //v2/open/available/${task_id}.json
 
-router.get('/open/available/:id', function (req, res, next) {
+router.get('/open/task/:id', function (req, res, next) {
 
     var taskid = (req.params.id).toUpperCase().replace(/.JSON/, "");
 
@@ -90,7 +90,7 @@ router.get('/open/available/:id', function (req, res, next) {
         } else {
             var newRows = [];
             var datemax = Math.ceil((end_date - start_date) / (86400 * 1000));
-            var caculateRows = 0;
+            //var caculateRows = 0;
             for (var i = 0; i <= datemax; i++) {
                 var caculateDate = start_date + i * 86400 * 1000;
                 var dateInfo = pubfuncs.getDateYMD(new Date(caculateDate));
@@ -108,9 +108,9 @@ router.get('/open/available/:id', function (req, res, next) {
                     if (err) res.json(err);
                     else {
                         newRows.push(rows);
-                        caculateRows = caculateRows +1;
+                        //caculateRows = caculateRows +1;
 
-                        if (caculateRows > datemax)
+                        if (newRows.length > datemax)
                         {
                             res.json(newRows);
                         }

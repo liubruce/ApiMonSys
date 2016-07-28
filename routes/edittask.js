@@ -3,6 +3,7 @@ var router = express.Router();
 var connection = require('../database/dbsource.js');
 var schedule = require('node-schedule');
 var callSoapApi = require('../taskschedule/callSoapApi');
+var log4js = require('../applog').logger;
 
 /* GET users listing. */
 router.get('/', function (req, res, next) {
@@ -64,13 +65,13 @@ router.post('/', function (req, res) {
         connection.query(userModSql, userModSql_Params, function (err, result) {
             if (err) {
                 //console.log('[UPDATE ERROR] - ',err.message);
-                console.log(userModSql + ' ' + userModSql_Params);
+                log4js.debug(userModSql + ' ' + userModSql_Params);
                 res.send('[UPDATE ERROR] - ' + err.message);
                 return;
             }
-            console.log('----------UPDATE-------------');
-            console.log('UPDATE affectedRows', result.affectedRows);
-            console.log('******************************');
+            log4js.debug('----------UPDATE-------------');
+            log4js.debug('UPDATE affectedRows', result.affectedRows);
+            log4js.debug('******************************');
             //改变schedule信息
             if (schedule.scheduledJobs[req.body.taskid.toString()])  schedule.cancelJob(req.body.taskid.toString());
             newSchedule(req);
@@ -87,12 +88,12 @@ router.post('/', function (req, res) {
             'api_url=? ,status=?,create_time=?,update_time=?', values,
             function (error, results) {
                 if (error) {
-                    console.log("Write API 监控数据错误 Error: " + error.message);
+                    log4js.debug("Write API 监控数据错误 Error: " + error.message);
                     //connection.end();
                     return;
                 }
-                console.log('Inserted: ' + results.affectedRows + ' row.');
-                console.log('Id inserted: ' + results.insertId);
+                log4js.debug('Inserted: ' + results.affectedRows + ' row.');
+                log4js.debug('Id inserted: ' + results.insertId);
                 newSchedule(req);
             }
         );
@@ -120,7 +121,7 @@ function newSchedule(req){
         startTime = startTime + 1;
         if (startTime > 1) startTime = 0;
 
-        console.log(times);
+        log4js.debug(times);
         var oneJob = schedule.scheduleJob(req.body.taskid.toString(), rule, //startTime.toString()+ '/' + rows[i].frequency + ' * * * * *'
             function (taskid, apiurl) {
                 exectask(apiurl, taskid, connection)
