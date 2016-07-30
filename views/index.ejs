@@ -1,49 +1,71 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-      <script language="javascript">
-          function delConfirm(taskid) {
-              if (confirm("确定删除这个任务吗")) {
-                  location.href = '/edittask?taskid='+ taskid + '&action=delete';
-              }
-          }
-      </script>
-  </head>
-  <body>
+    <link rel='stylesheet' href='/stylesheets/stylelist.css'/>
+    <script language="javascript">
+        function delConfirm(taskid) {
+            if (confirm("确定删除这个任务吗")) {
+                location.href = '/edittask?taskid=' + taskid + '&action=delete';
+            }
+        }
+    </script>
+</head>
+<body onLoad="show()"  bgcolor="#8B8B8B">
+<div id="div1">
     <h1><%= title %></h1>
-    <p>Welcome to <%= title %> <button type="button"
-                                       onclick="javascript:window.location.href='/edittask?taskid=0&action=add';">新增</button></p>
-    <table>
-      <tr>
-        <th>任务编号</th><th>任务名称</th><th>任务描述</th><th>频率</th><th>API类别</th><th>API方法</th><th>API URL</th>
-          <th>任务状态</th><th>任务编辑</th><th>删除任务</th>
-      </tr>
 
-        <% rows.forEach(function(oneRow){%>
+    <p>Welcome to <%= title %>
+        <button type="button"
+                onclick="javascript:window.location.href='/edittask?taskid=0&action=add';">新增
+        </button>
+    </p>
+    <table id="tab1">
+        <tbody>
+        <tr>
+            <th style="width:6%;">任务编号</th><th style=" width:10%;">任务名称</th><th style="width:10%;">任务描述</th><th style=" width:5%;">频率</th><th style="width:10%">API类别</th><th style="width:10%">API方法</th><th style="width:20%;">API URL</th>
+            <th style="width:7%">任务状态</th><th  style="width:6%">任务编辑</th><th  style="width:7%">删除任务</th>
+        </tr>
+        <% rows.forEach(function(oneRow){ %>
         <form action="/edittask" method='get'>
-            <input id="taskid" name="taskid" type="hidden" value=<%=oneRow.task_id%> />
-            <input id="action" name="action" type="hidden" value="edit" />
+            <input id="taskid" name="taskid" type="hidden" value=<%= oneRow.task_id %>>
+            <input id="action" name="action" type="hidden" value="edit">
             <tr>
-                <td><%=oneRow.task_id%></td>
-                <td><%=oneRow.task_name%></td>
-                <td><%=oneRow.task_desc%></td>
-                <td><%=oneRow.frequency%></td>
-                <td><%=oneRow.api_type%></td>
-                <td><%=oneRow.api_method%></td>
-                <td><%=oneRow.api_url%></td>
-                <%if(schedule.scheduledJobs[oneRow.task_id]) {%>
-                <td> 执行中 </td>
+                <td><%= oneRow.task_id %></td>
+                <td><%= oneRow.task_name %></td>
+                <td><%= oneRow.task_desc %></td>
+                <td><%= oneRow.frequency %></td>
+                <td><%= oneRow.api_type %></td>
+                <td><%= oneRow.api_method %></td>
+                <td><%= oneRow.api_url %></td>
+                <% if(schedule.scheduledJobs[oneRow.task_id]) { %>
+                <td> 执行中</td>
                 <% }else { %>
                 <td> 没有启动</td>
                 <% } %>
                 <td><input type="submit" value="修改"/></td>
-                <td><button type="button" onclick="javascript:delConfirm(<%=oneRow.task_id%>);">删除</button></td>
+                <td>
+                    <button type="button" onclick="javascript:delConfirm(<%= oneRow.task_id %>);">删除</button>
+                </td>
             </tr>
         </form>
-        <%})%>
+        <% }) %>
 
     </table>
-  </body>
+</div>
+<script>
+    function show(){
+        var otab = document.getElementById('tab1');
+
+        for (var i = 1; i < otab.tBodies[0].rows.length; i++) {
+            var s=otab.tBodies[0].rows[i];
+            if(i%2==0){
+                s.style.background ='rgba(220, 210, 210)';
+            }else
+                s.style.background = 'rgb(255, 255, 255)';
+        }
+    }
+</script>
+</body>
+
 </html>

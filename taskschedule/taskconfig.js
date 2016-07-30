@@ -75,7 +75,7 @@ function taskconfig(schedule) {
             log4js.debug('taskid=' + rows[i].task_id + ' ' + times);
             var oneJob = schedule.scheduleJob(rows[i].task_id.toString(), rule, //startTime.toString()+ '/' + rows[i].frequency + ' * * * * *'
                 function (taskid, apiurl) {
-                    exectask(apiurl, taskid, connection)
+                    exectask(apiurl, taskid)
                 }.bind(null, rows[i].task_id, rows[i].api_url));
 
             //j.jobid = rows[i].task_id;

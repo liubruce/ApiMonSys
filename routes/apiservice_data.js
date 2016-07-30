@@ -6,37 +6,15 @@ var pubfuncs = require('../service/pubfunctions');
 var callSoapApi = require('../taskschedule/callSoapApi');
 var log4js = require('../applog').logger;
 
-/* GET home page. */
-router.get('/open/taskLists.json', function (req, res, next) {
 
-    connection.query('select task_id, api_url,frequency,status,task_desc,task_name' +
-        ' from taskapiinfo', function (err, rows, fields) {
-        if (err) throw res.json(err);
-        //var success = '任务列表';
-        //res.render('index', { title: success, schedule: schedule, rows: rows });
-        res.json(rows);
-    });
-
-});
-
-//v2/open/available/${task_id}.json
-
-router.post('/open/task/:id',function(req,res){
-    console.log(req.body);
-    //需要写入数据库
-
-    callSoapApi.writeApiData(connection,req.body.currentTime,req.body.statusCode, req.body.responseTime,
-        req.body.taskid, req.body.availrate, req.body.correctrate, req.body.monitorid);
-
-    res.json('success');
-});
-
-router.get('/open/task/:id', function (req, res, next) {
+router.get('/open/taskhour/:id', function (req, res, next) {
 
     var taskid = (req.params.id).toUpperCase().replace(/.JSON/, "");
 
-    var selectStr = 'select response_time, task_id, availrate, correctrate,DATE_FORMAT(FROM_UNIXTIME(create_time/1000),' +
-        '"%Y-%m-%d %H:%i:%S") as create_time from apimonitordata' + pubfuncs.formatNow(new Date()) + ' where task_id=' + taskid; //+ ' and create_time>' + currentDate
+    var fieldstr = 'select max_response_time, min_response_time,round(total_response_time/total,2) as avg_response_time, task_id, ' +
+        'available, correctness,DATE_FORMAT(FROM_UNIXTIME(hourtime/1000),"%Y-%m-%d %H:%i:%S") as hour_time ';
+
+    var selectStr = fieldstr +' from apimonitordata_hour' + pubfuncs.formatNow(new Date()) + ' where task_id=' + taskid; //+ ' and create_time>' + currentDate
 
     if (((typeof req.query.start_date === 'undefined') && (typeof req.query.end_date === 'undefined'))) {
         var currentDate = pubfuncs.getDatewithoutHMS(new Date())
@@ -45,7 +23,7 @@ router.get('/open/task/:id', function (req, res, next) {
         //console.log(currentDate);
         currentDate = currentDate.getTime();
         //console.log(currentDate);
-        selectStr = selectStr + ' and create_time>=' + currentDate;
+        selectStr = selectStr + ' and hour_time>=' + currentDate;
         //console.log(selectStr);
         connection.query(selectStr, function (err, rows, fields) {
             if (err) res.json(err);
@@ -86,9 +64,8 @@ router.get('/open/task/:id', function (req, res, next) {
         }
         if (pubfuncs.formatNow(new Date(start_date)) === pubfuncs.formatNow(new Date(end_date))) {
 
-            var selectStr = 'select response_time, task_id, availrate, correctrate,DATE_FORMAT(FROM_UNIXTIME(create_time/1000),' +
-                '"%Y-%m-%d %H:%i:%S") as create_time from apimonitordata' + pubfuncs.formatNow(new Date(start_date)) + ' where task_id=' + taskid; //+ ' and create_time>' + currentDate
-            selectStr = selectStr + ' and create_time>=' + start_date + ' and create_time <=' + end_date;
+            var selectStr = fieldstr + ' from apimonitordata_hour' + pubfuncs.formatNow(new Date(start_date)) + ' where task_id=' + taskid; //+ ' and create_time>' + currentDate
+            selectStr = selectStr + ' and hourtime>=' + start_date + ' and hourtime <=' + end_date;
 
             connection.query(selectStr, function (err, rows, fields) {
                 if (err) res.json(err);
@@ -111,10 +88,9 @@ router.get('/open/task/:id', function (req, res, next) {
 
                 caculateEnd = (caculateEnd > end_date)  ? end_date : caculateEnd;
 
-                var selectStr = 'select response_time, status, task_id, availrate, correctrate,DATE_FORMAT(FROM_UNIXTIME(create_time/1000),' +
-                    '"%Y-%m-%d %H:%i:%S") as create_time from apimonitordata' + pubfuncs.formatNow(new Date(caculateDate)) + ' where task_id=' + taskid; //+ ' and create_time>' + currentDate
-                selectStr = selectStr + ' and create_time>=' + caculateDate + ' and create_time <=' + caculateEnd;
-                  //  （caculateEnd > end_date ）? end_date : caculateEnd;
+                var selectStr = fieldstr + ' from apimonitordata_hour' + pubfuncs.formatNow(new Date(caculateDate)) + ' where task_id=' + taskid; //+ ' and create_time>' + currentDate
+                selectStr = selectStr + ' and hourtime>=' + caculateDate + ' and hourtime <=' + caculateEnd;
+                //  （caculateEnd > end_date ）? end_date : caculateEnd;
                 log4js.debug('select : ' +  selectStr);
                 connection.query(selectStr, function (err, rows, fields) {
                     if (err) res.json(err);
@@ -138,24 +114,6 @@ router.get('/open/task/:id', function (req, res, next) {
 
     }
 
-
-    //for (var i=0; i< req.)
-    //res.json(selectStr + ' length: ' +  req.query.length );
-
 });
-
-router.get('/open/taskFaultLists.json', function (req, res, next) {
-    var selectStr = 'select task_id,DATE_FORMAT(FROM_UNIXTIME(fault_time/1000),"%Y-%m-%d %H:%i:%S") as fault_time ,errormessage from taskfaultinfo';
-
-    connection.query(selectStr, function (err, rows, fields) {
-        if (err) throw res.json(err + ' select:' + selectStr);
-        //var success = '任务列表';
-        //res.render('index', { title: success, schedule: schedule, rows: rows });
-        res.json(rows);
-    });
-
-});
-
-
 
 module.exports = router;

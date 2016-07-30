@@ -8,6 +8,7 @@ var bodyParser = require('body-parser');
 var routes = require('./routes/index');
 var editTask = require('./routes/edittask');
 var apiservice = require('./routes/apiservice');
+var apiservice_data = require('./routes/apiservice_data');
 
 //从此后面的require 是Bruce Liu自己书写的程序
 var schedule = require('node-schedule');
@@ -45,6 +46,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', routes);
 app.use('/edittask', editTask);
 app.use('/v2',apiservice);
+app.use('/v2',apiservice_data);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

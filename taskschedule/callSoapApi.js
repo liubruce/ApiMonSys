@@ -39,65 +39,76 @@ function createhourtable(tableSuffix) {
     return createtablestr;
 }
 
-function caculateHourData(connection, datestr, responseTime, taskid, availrate, correctrate) {
+function createdaytable(tableSuffix) {
+    var createtablestr = "CREATE TABLE IF NOT EXISTS `apimonitordata_day" + tableSuffix + "` (" +
+        "`id` bigint(20) NOT NULL AUTO_INCREMENT," +
+        "`monitorid` bigint(20), " +
+        "`task_id` bigint(20) NOT NULL," +
+        "`daytime` bigint(20) NOT NULL," +
+        "`min_response_time` float NOT NULL," +
+        "`max_response_time` float NOT NULL," +
+        "`available` bigint(20)," +
+        "`correctness` bigint(20)," +
+        "`total` int(11)," +
+        "`total_response_time` float NOT NULL," +
+        "PRIMARY KEY (`id`)" +
+        ") ENGINE=InnoDB AUTO_INCREMENT=15180 DEFAULT CHARSET=utf8;";
 
-    connection.query(createhourtable(datestr));
+    return createtablestr;
+}
 
+function createSummaryData(connection, datestr, responseTime, taskid, availrate, correctrate,tablename, searchtime ,monitorid) {
 
-    var hourtime = new Date(pubfunc.getDatewithoutHMS(new Date())).getTime();
-
-
-    var selectSql = 'select * from apimonitordata_hour' + datestr + ' where task_id=' + taskid + ' and hourtime=' + hourtime + '; ';
+    var selectSql = 'select * from apimonitordata_' + tablename +  datestr + ' where task_id=' + taskid + ' and ' +
+    tablename + 'time=' + searchtime + ' and monitorid= ' + monitorid + ';  ';
 
 
     connection.query(selectSql,
         function (error, rows, fields) {
             if (error) {
-                log4js.debug("Select hour data Error: " + error.message);
+                log4js.debug('Select ' +  tablename + ' data Error: ' + error.message);
                 return;
             } else {
                 if (rows.length > 0) {
-                    var min_response_time;
-                    var max_response_time;
-                    var available = rows[0].available + availrate;
-                    var correctness = rows[0].correctness + correctrate;
-                    var total = rows[0].total + 1;
+                    var min_response_time = rows[0].min_response_time;
+                    var max_response_time = rows[0].max_response_time;
+                    var available = parseInt(rows[0].available) + parseInt(availrate);
+                    var correctness = parseInt(rows[0].correctness) + parseInt(correctrate);
+                    var total = parseInt(rows[0].total) + 1;
                     var total_response_time = parseFloat(rows[0].total_response_time) + parseFloat(responseTime);
-                    if (rows[0].min_response_time < responseTime) min_response_time = responseTime;
-                    else min_response_time = rows[0].min_response_time;
-
+                    if (rows[0].min_response_time > responseTime) min_response_time = responseTime;
                     if (rows[0].max_response_time < responseTime) max_response_time = responseTime;
-                    else max_response_time = rows[0].max_response_time;
 
+                    var updateStr = 'update  apimonitordata_' + tablename +  datestr + ' SET min_response_time = ?, max_response_time = ?,' +
+                        'available = ?, correctness = ?, total = ?, total_response_time = ?' + ' where task_id=' + taskid
+                        + ' and ' + tablename +'time=' + searchtime + ' and monitorid=' + monitorid;
 
-                    var updateStr = 'update  apimonitordata_hour' + datestr + ' SET min_response_time = ?, max_response_time = ?,' +
-                        'available = ?, correctness = ?, total = ?, total_response_time = ?' + ' where task_id=' + taskid + ' and hourtime=' + hourtime;
                     var values = [min_response_time, max_response_time, available, correctness, total, total_response_time];
+
                     log4js.debug('updateStr:' + updateStr);
                     log4js.debug('values:' + values);
                     connection.query(updateStr, values,
                         function (error, results) {
                             if (error) {
-                                log4js.debug("Update API Hour 监控数据错误 Error: " + error.message);
+                                log4js.debug('Update API ' + tablename + ' 监控数据错误 Error: ' + error.message);
                                 //connection.end();
                                 return;
                             }
                             //Caculate Hour and Day data
 
                             log4js.debug('Updated: ' + results.affectedRows + ' row.');
-                            log4js.debug('Id Updated: ' + results.insertId);
                         }
                     );
                 } else {
 
-                    var insertStr = 'insert into  apimonitordata_hour' + datestr + ' SET min_response_time = ?, max_response_time = ?,' +
-                        'available = ?, correctness = ?, task_id=? , hourtime = ? , total = ?, total_response_time = ? ';
-                    var values = [responseTime, responseTime, availrate, correctrate, taskid, hourtime, 1, responseTime];
+                    var insertStr = 'insert into  apimonitordata_' +  tablename + datestr + ' SET min_response_time = ?, max_response_time = ?,' +
+                        'available = ?, correctness = ?, task_id=? , ' + tablename + 'time = ? , total = ?, total_response_time = ? , monitorid= ?';
+                    var values = [responseTime, responseTime, availrate, correctrate, taskid, searchtime, 1, responseTime, monitorid];
                     log4js.debug('insertStr:' + insertStr);
                     connection.query(insertStr, values,
                         function (error, results) {
                             if (error) {
-                                log4js.debug("Write API Hour 监控数据错误 Error: " + error.message);
+                                log4js.debug('Write API ' + tablename + ' 监控数据错误 Error: ' + error.message);
                                 //connection.end();
                                 return;
                             }
@@ -111,25 +122,38 @@ function caculateHourData(connection, datestr, responseTime, taskid, availrate, 
             }
         });
 
+}
+
+function caculateHourData(connection, datestr, responseTime, taskid, availrate, correctrate, monitorid) {
+
+    connection.query(createhourtable(datestr));
+    connection.query(createdaytable(datestr));
+
+
+    var hourtime = new Date(pubfunc.getDatewithoutHMS(new Date())).getTime();
+
+    createSummaryData(connection, datestr, responseTime, taskid, availrate, correctrate, 'hour', hourtime, monitorid);
+
+    var daytime = new Date(pubfunc.getDateYMD(new Date())).getTime();
+
+    createSummaryData(connection, datestr, responseTime, taskid, availrate, correctrate, 'day', daytime, monitorid);
 
 }
 
 
-function writeApiData(statusCode, responseTime, taskid, availrate, correctrate) {
+function writeApiData(connection, currentTime, statusCode, responseTime, taskid, availrate, correctrate,monitorid) {
 
 
-    var connection = require('../database/dbsource.js');
-
-    //create_time   | response_time | status | task_id
+//    var connection = require('../database/dbsource.js');
 
     var datestr = pubfunc.formatNow(new Date());
     connection.query(createtablestr(datestr));
 
-    var currentTime = new Date().getTime();
-    var values = [currentTime, responseTime, statusCode, taskid, availrate, correctrate];
+
+    var values = [currentTime, responseTime, statusCode, taskid, availrate, correctrate,monitorid];
 
     var insertSql = 'INSERT INTO apimonitordata' + datestr + ' SET create_time = ?, response_time = ? , ' +
-        'status = ?, task_id=?, availrate=?, correctrate=?';
+        'status = ?, task_id=?, availrate=?, correctrate=?, monitorid =?';
     //console.log(insertSql);
     connection.query(insertSql, values,
         function (error, results) {
@@ -139,7 +163,7 @@ function writeApiData(statusCode, responseTime, taskid, availrate, correctrate) 
                 return;
             }
             //Caculate Hour and Day data
-            caculateHourData(connection, datestr, responseTime, taskid, availrate, correctrate);
+            caculateHourData(connection, datestr, responseTime, taskid, availrate, correctrate, monitorid);
 
             log4js.debug('Inserted: ' + results.affectedRows + ' row.');
             log4js.debug('Id inserted: ' + results.insertId);
@@ -147,6 +171,26 @@ function writeApiData(statusCode, responseTime, taskid, availrate, correctrate) 
     );
     //GetData(client);
 }
+
+function writefaultdata(connection, currentTime, taskid,errormessage, monitorid) {
+
+    var values = [currentTime, taskid, errormessage, monitorid];
+
+    var insertSql = 'INSERT INTO taskfaultinfo SET fault_time = ?, task_id=?, errormessage =?,monitorid =?';
+    //console.log(insertSql);
+    connection.query(insertSql, values,
+        function (error, results) {
+            if (error) {
+                log4js.debug("Write API 故障数据错误 Error: " + error.message);
+                //connection.end();
+                return;
+            }
+            log4js.debug('Inserted: ' + results.affectedRows + ' row.');
+            log4js.debug('Id inserted: ' + results.insertId);
+        }
+    );
+}
+
 function execGet(apiurl, taskid) {
 
     var https = require('http');
@@ -170,6 +214,8 @@ function execGet(apiurl, taskid) {
 // [ 1800216, 25 ]
 
     //connection.connect();
+    var connection = require('../database/dbsource.js');
+    var currentTime = new Date().getTime();
 
     var reqGet = https.request(optionsget,
         function (res) {
@@ -186,10 +232,15 @@ function execGet(apiurl, taskid) {
 
             if (res.statusCode >= 200 && res.statusCode < 300) {
                 var availrate = 1, correctrate = 1;
-            } else
+            } else{
+
                 var availrate = 0, correctrate = 0;
 
-            writeApiData(res.statusCode, responseTime, taskid, availrate, correctrate);
+                writefaultdata(connection,currentTime,taskid, '状态码：' + res.statusCode,0);
+
+            }
+
+            writeApiData(connection,currentTime,res.statusCode, responseTime, taskid, availrate, correctrate,0);
 
             //schedule.job
             //console.log(`Benchmark took ${diff[0] * 1e9 + diff[1]} nanoseconds`);
@@ -200,7 +251,7 @@ function execGet(apiurl, taskid) {
             // uncomment it for header details
             //	console.log("headers: ", res.headers);
 
-
+/*
             res.on('data', function (d) {
                 console.info('GET result:\n');
                 //process.stdout.write(d);
@@ -211,39 +262,23 @@ function execGet(apiurl, taskid) {
                 console.info('\n\nCall completed');
 
             });
-
+*/
         }); //.bind(null,connection,taskid)
 
     reqGet.end();
     reqGet.on('error', function (e) {
-            writeApiData(0, 0, taskid, 0, 0);
-            console.error('网络问题:' + e + ' statuscode：'); // + res.statusCode);
+            writeApiData(connection, currentTime,0, 0, taskid, 0, 0,0);
+            writefaultdata(connection,currentTime,taskid, e.message,0);
+            console.error('网络问题:' + e.message + ' statuscode：'); // + res.statusCode);
         }
     );
 
     log4js.debug("调用结束 " + taskid);
 
-    reqGet.on('response', function (response) {
-
-        log4js.debug("statusCode2222: " + taskid + ' ', response.statusCode + Date());
-
-        var schedule = require('node-schedule');
-        var connection = require('../database/dbsource.js');
-        if (schedule.scheduledJobs['T_2']) {
-            var result = schedule.cancelJob('T_2');
-            for (i = 3; i < 12; i++) {
-                result = schedule.cancelJob('T_' + i);
-            }
-            if (result) {
-                var success = 'success'; //console.log('jobs canceled');
-            }
-        }
-
-
-    })
 
 }
 
 module.exports.execGet = execGet;
 module.exports.createtablestr = createtablestr;
+module.exports.writeApiData = writeApiData;
 

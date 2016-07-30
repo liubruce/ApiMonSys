@@ -10,7 +10,7 @@ router.get('/', function (req, res, next) {
     //console.log(req.query.taskid);
     //res.send(req.query.taskid);
 
-    //console.log('select * from taskapiinfo where task_id=' + req.query.taskid);
+    //console.log('taskid:' + req.query.taskid + ' action:' + req.query.action);
     if (req.query.taskid) {
         switch (req.query.action) {
             case "edit":
