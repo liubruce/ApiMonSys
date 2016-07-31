@@ -66,7 +66,7 @@ function createSummaryData(connection, datestr, responseTime, taskid, availrate,
     connection.query(selectSql,
         function (error, rows, fields) {
             if (error) {
-                log4js.debug('Select ' +  tablename + ' data Error: ' + error.message);
+                log4js.error('Select ' +  tablename + ' data Error: ' + error.message + ' SQL语句：' + selectSql);
                 return;
             } else {
                 if (rows.length > 0) {
@@ -108,7 +108,7 @@ function createSummaryData(connection, datestr, responseTime, taskid, availrate,
                     connection.query(insertStr, values,
                         function (error, results) {
                             if (error) {
-                                log4js.debug('Write API ' + tablename + ' 监控数据错误 Error: ' + error.message);
+                                log4js.error('Write API ' + tablename + ' 监控数据错误 Error: ' + error.message);
                                 //connection.end();
                                 return;
                             }
@@ -134,8 +134,8 @@ function caculateHourData(connection, datestr, responseTime, taskid, availrate, 
 
     createSummaryData(connection, datestr, responseTime, taskid, availrate, correctrate, 'hour', hourtime, monitorid);
 
-    var daytime = new Date(pubfunc.getDateYMD(new Date())).getTime();
-
+    var daytime = new Date(pubfunc.getDateYMD(new Date(),' 0:0:0')).getTime();
+    //console.log('日期8888888：' + pubfunc.getDateYMD(new Date()));
     createSummaryData(connection, datestr, responseTime, taskid, availrate, correctrate, 'day', daytime, monitorid);
 
 }
@@ -158,7 +158,7 @@ function writeApiData(connection, currentTime, statusCode, responseTime, taskid,
     connection.query(insertSql, values,
         function (error, results) {
             if (error) {
-                log4js.debug("Write API 监控数据错误 Error: " + error.message);
+                log4js.error("Write API 监控数据错误 Error: " + error.message);
                 //connection.end();
                 return;
             }

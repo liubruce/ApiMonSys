@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/stylelist.css'/>
+    <script language="javascript">
+        function delConfirm(taskid) {
+            if (confirm("确定删除这个任务吗")) {
+                location.href = '/edittask?taskid=' + taskid + '&action=delete';
+            }
+        }
+    </script>
+</head>
+<body onLoad="show()" >
+<div id="div1">
+    <h1><%= title %></h1>
+
+    <table id="tab1">
+        <tbody>
+        <tr>
+            <th style="width:6%;">任务编号</th><th style=" width:20%;">任务名称</th><th style="width:10%;">故障次数</th><th style=" width:6%;">明细</th>
+        </tr>
+        <% rows.forEach(function(oneRow){ %>
+
+            <tr>
+                <td><%= oneRow.task_id %></td>
+                <td><%= oneRow.task_name %></td>
+                <td><%= oneRow.faultnums %></td>
+                <td>
+                    <button type="button" onclick="window.location.href='/taskfaults/<%= oneRow.task_id %>';">查看</button>
+                </td>
+            </tr>
+        <% }) %>
+
+    </table>
+</div>
+<script>
+    function show(){
+        var otab = document.getElementById('tab1');
+
+        for (var i = 1; i < otab.tBodies[0].rows.length; i++) {
+            var s=otab.tBodies[0].rows[i];
+            if(i%2==0){
+                s.style.background ='rgba(220, 210, 210)';
+            }else
+                s.style.background = 'rgb(255, 255, 255)';
+        }
+    }
+</script>
+</body>
+
+</html>
