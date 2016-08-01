@@ -7,9 +7,15 @@ var callSoapApi = require('../taskschedule/callSoapApi');
 var log4js = require('../applog').logger;
 
 router.get('/open/task/:id', function (req, res, next) {
-    searchData.searchMonitorRawData(req, res);
+    searchData.searchMonitorRawData(req, res, 'API', 'JSON');
 
 });
+
+router.get('/open/alltask', function (req, res, next) {
+    searchData.searchMonitorRawData(req, res, 'API', 'JSON');
+
+});
+
 router.get('/open/taskhour/:id', function (req, res, next) {
 
     searchData.searchMonitorData(req, res, 'hour');

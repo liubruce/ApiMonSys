@@ -1,33 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title><%= title %></title>
+    <title><%= title %> </title>
     <link rel='stylesheet' href='/stylesheets/stylelist.css'/>
-    <script language="javascript">
-        function delConfirm(taskid) {
-            if (confirm("确定删除这个任务吗")) {
-                location.href = '/edittask?taskid=' + taskid + '&action=delete';
-            }
-        }
-    </script>
+
 </head>
 <body onLoad="show()"  >
 <div id="div1">
-    <h1><%= title %>  <button type="button" onclick="javascript:window.location.href='/';">返回</button></h1>
+    <h1><%= title %> <button type="button" onclick="javascript:window.location.href='/';">返回</button></h1>
 
     <table id="tab1">
         <tbody>
         <tr>
-            <th style="width:6%;">任务编号</th><th style="width:15%;">任务名称</th><th style=" width:6%;">监控点编号</th><th style="width:10%;">故障时间</th><th style=" width:20%;">错误信息</th>
+            <th style="width:6%;">任务编号</th><th style="width:15%;">任务名称</th><th style=" width:6%;">可用率</th><th style="width:10%;">正确率</th><th style=" width:20%;">执行时间</th>
         </tr>
         <% rows.forEach(function(oneRow){ %>
 
             <tr>
                 <td><%= oneRow.task_id %></td>
                 <td><%= task_name %></td>
-                <td><%= oneRow.monitorid %></td>
-                <td><%= oneRow.faulttime %></td>
-                <td><%= oneRow.errormessage %></td>
+                <td><%= oneRow.availrate*100 %></td>
+                <td><%= oneRow.correctrate*100 %></td>
+                <td><%= oneRow.create_time %></td>
             </tr>
         <% }) %>
 

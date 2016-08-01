@@ -10,6 +10,7 @@ var editTask = require('./routes/edittask');
 var apiservice = require('./routes/apiservice');
 var apiservice_data = require('./routes/apiservice_data');
 var taskfaults = require('./routes/taskfaultlists');
+var taskMonitorInfo = require('./routes/taskMonitorInfo');
 
 //从此后面的require 是Bruce Liu自己书写的程序
 var schedule = require('node-schedule');
@@ -47,6 +48,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', routes);
 app.use('/edittask', editTask);
 app.use('/',taskfaults);
+app.use('/',taskMonitorInfo);
 app.use('/v2',apiservice);
 app.use('/v2',apiservice_data);
 

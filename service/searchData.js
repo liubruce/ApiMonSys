@@ -7,21 +7,38 @@ var pubfuncs = require('../service/pubfunctions');
 var callSoapApi = require('../taskschedule/callSoapApi');
 var log4js = require('../applog').logger;
 
-function searchMonitorRawData(req, res){
+function searchMonitorRawData(req, res, apiflag, resultPage){
 
-    var taskid = (req.params.id).toUpperCase().replace(/.JSON/, "");
+    function output(res, result, apiflag){
+        if (apiflag === 'API')
+        res.json(result);
+        else res.render(resultPage, {title: '任务监控实时数据', rows: result ,task_name: req.query.task_name});
+
+    }
+
+    var taskidStr = '';
+
+//    console.log('id:::' + req.params.id);
+
+    if (!(typeof req.params.id === 'undefined'))
+    {
+        var taskidStr = (req.params.id).toUpperCase().replace(/.JSON/, "");
+        taskidStr = ' task_id=' + taskidStr + ' and ';
+    }
+
+    console.log('taskidstr ' + taskidStr);
 
     var selectStr = 'select response_time, task_id, availrate, correctrate,DATE_FORMAT(FROM_UNIXTIME(create_time/1000),' +
-        '"%Y-%m-%d %H:%i:%S") as create_time from apimonitordata' + pubfuncs.formatNow(new Date()) + ' where task_id=' + taskid; //+ ' and create_time>' + currentDate
+        '"%Y-%m-%d %H:%i:%S") as create_time from apimonitordata' + pubfuncs.formatNow(new Date()) + '  where ' + taskidStr;
 
     if (((typeof req.query.start_date === 'undefined') && (typeof req.query.end_date === 'undefined'))) {
-        var currentDate = pubfuncs.getDatewithoutHMS(new Date())
+        var currentDate = pubfuncs.getDateYMD(new Date(), ' 0:0:0')
         //console.log(currentDate);
         currentDate = new Date(currentDate);
         //console.log(currentDate);
         currentDate = currentDate.getTime();
         //console.log(currentDate);
-        selectStr = selectStr + ' and create_time>=' + currentDate;
+        selectStr = selectStr + '  create_time>=' + currentDate;
         //console.log(selectStr);
         connection.query(selectStr, function (err, rows, fields) {
             if (err) res.json(err);
@@ -31,7 +48,8 @@ function searchMonitorRawData(req, res){
                 //var success = '任务列表';
                 //res.render('index', { title: success, schedule: schedule, rows: rows });
                 if (rows.length > 0)
-                    res.json(rows);
+                    //res.json(rows);
+                    output(res,rows,apiflag);
                 else
                     res.json('没有数据')
             }
@@ -63,14 +81,16 @@ function searchMonitorRawData(req, res){
         if (pubfuncs.formatNow(new Date(start_date)) === pubfuncs.formatNow(new Date(end_date))) {
 
             var selectStr = 'select response_time, task_id, availrate, correctrate,DATE_FORMAT(FROM_UNIXTIME(create_time/1000),' +
-                '"%Y-%m-%d %H:%i:%S") as create_time from apimonitordata' + pubfuncs.formatNow(new Date(start_date)) + ' where task_id=' + taskid; //+ ' and create_time>' + currentDate
-            selectStr = selectStr + ' and create_time>=' + start_date + ' and create_time <=' + end_date;
+                '"%Y-%m-%d %H:%i:%S") as create_time from apimonitordata' + pubfuncs.formatNow(new Date(start_date)) + ' where ' +
+                taskidStr;
+
+            selectStr = selectStr + '  create_time>=' + start_date + ' and create_time <=' + end_date;
 
             connection.query(selectStr, function (err, rows, fields) {
                 if (err) res.json(err);
                 else {
                     if (rows.length > 0)
-                        res.json(rows);
+                        output(res,rows,apiflag);
                     else
                         res.json('没有数据')
                 }
@@ -88,8 +108,9 @@ function searchMonitorRawData(req, res){
                 caculateEnd = (caculateEnd > end_date)  ? end_date : caculateEnd;
 
                 var selectStr = 'select response_time, status, task_id, availrate, correctrate,DATE_FORMAT(FROM_UNIXTIME(create_time/1000),' +
-                    '"%Y-%m-%d %H:%i:%S") as create_time from apimonitordata' + pubfuncs.formatNow(new Date(caculateDate)) + ' where task_id=' + taskid; //+ ' and create_time>' + currentDate
-                selectStr = selectStr + ' and create_time>=' + caculateDate + ' and create_time <=' + caculateEnd;
+                    '"%Y-%m-%d %H:%i:%S") as create_time from apimonitordata' + pubfuncs.formatNow(new Date(caculateDate)) + ' where '
+                 + taskidStr;
+                selectStr = selectStr + '  create_time>=' + caculateDate + ' and create_time <=' + caculateEnd;
                 //  （caculateEnd > end_date ）? end_date : caculateEnd;
                 log4js.debug('select : ' +  selectStr);
                 connection.query(selectStr, function (err, rows, fields) {
@@ -100,7 +121,8 @@ function searchMonitorRawData(req, res){
 
                         if (newRows.length >= datemax)
                         {
-                            res.json(newRows);
+                            output(res,rows,apiflag);
+                            //res.json(newRows);
                         }
                     }
 
