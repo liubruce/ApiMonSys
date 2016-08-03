@@ -3,8 +3,21 @@
 <head>
     <title><%= title %></title>
     <link rel='stylesheet' href='/stylesheets/stylelist.css'/>
+
+
+
+
 </head>
-<body onLoad="show()" >
+<!--加载AngularJS-->
+<script src="/javascripts/angular.min1.5.7.js"></script>
+<!--加载ECharts-->
+<script src="/javascripts/echarts.min.js"></script>
+<script src="/javascripts/line.js"></script>
+
+<body onLoad="show()" ng-app="app" ng-controller="lineCtrl">
+
+
+
 <div id="div1">
     <h1><%= title %></h1>
     <table id="tab1">
@@ -32,6 +45,9 @@
 
     </table>
 </div>
+
+<line id="main" legend="legend" item="item" data="data"></line>
+
 <script>
     function show(){
         var otab = document.getElementById('tab1');

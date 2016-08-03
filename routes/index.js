@@ -18,13 +18,18 @@ router.get('/tasklists', function (req, res, next) {
 
             //console.log(selectStr);
             connection.query(selectStr, function (err, secondrows, fields) {
-                if (err) throw err;
-                //console.log(secondrows[0].task_id + "最后一次故障是 :" + secondrows[0].faulttime);
-                if (secondrows.length > 0)
-                    newRows.push(secondrows);
-                else
-                    newRows.push('{"availrate":"","status","","createtime":"今天没有执行"}');
+                if (err) {
+                    //throw err;
+                    newRows.push('[{"availrate":"","status","-1","createtime":"今天没有执行"}]');
+                } else {
+                    //console.log(secondrows[0].task_id + "最后一次故障是 :" + secondrows[0].faulttime);
+                    if (secondrows.length > 0)
+                        newRows.push(secondrows);
+                    else
+                        newRows.push('[{"availrate":"","status","-1","createtime":"今天没有执行"}]');
 
+
+                }
                 if (newRows.length === rows.length) {
                     // res.json(newRows);
                     //console.log(newRows[0][0].faulttime);
@@ -35,7 +40,6 @@ router.get('/tasklists', function (req, res, next) {
                     var success = '任务列表';
                     res.render('index', {title: success, schedule: schedule, rows: rows, newRows: newRows});
                 }
-
             });
 
 
@@ -44,4 +48,11 @@ router.get('/tasklists', function (req, res, next) {
     });
 });
 
-    module.exports = router;
+
+router.get('getRedirectHost', function (req, res, next) {
+
+    res.json(req.body);
+
+});
+
+module.exports = router;
