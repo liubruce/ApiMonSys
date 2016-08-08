@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/stylelist.css'/>
+    <script language="javascript">
+        function delConfirm(monitorid) {
+            if (confirm("确定删除这个监测点吗")) {
+                location.href = '/editmonitor?monitorid=' + monitorid + '&action=delete';
+            }
+        }
+    </script>
+</head>
+<body onLoad="show()" >
+<div id="div1">
+    <h1><%= title %></h1>
+
+        <button type="button"
+                onclick="javascript:window.location.href='/editmonitor?monitorid=0&action=add';">新增
+        </button>
+    </p>
+    <table id="tab1">
+        <tbody>
+        <tr>
+            <th style="width:6%;">监测点编号</th><th style=" width:10%;">监测点唯一号</th><th style="width:10%;">监测点名称</th><th style=" width:5%;">监测点描述</th>
+
+            <th  style="width:6%">监测点编辑</th><th  style="width:7%">删除监测点</th>
+        </tr>
+        <% for (i=0;i< rows.length;i++) { %>
+        <form action="/editmonitor" method='get'>
+            <input id="monitorid" name="monitorid" type="hidden" value=<%= rows[i].id %>>
+            <input id="action" name="action" type="hidden" value="edit">
+            <tr>
+                <td><%= rows[i].id %></td>
+                <td><%= rows[i].uuid %></td>
+                <td><%= rows[i].monitor_name %></td>
+                <td><%= rows[i].monitor_desc %></td>
+                <td><input type="submit" value="修改"/></td>
+                <td>
+                    <button type="button" onclick="javascript:delConfirm(<%= rows[i].id %>);">删除</button>
+                </td>
+            </tr>
+        </form>
+        <% } %>
+
+    </table>
+</div>
+<script>
+    function show(){
+        var otab = document.getElementById('tab1');
+
+        for (var i = 1; i < otab.tBodies[0].rows.length; i++) {
+            var s=otab.tBodies[0].rows[i];
+            if(i%2==0){
+                s.style.background ='rgba(220, 210, 210)';
+            }else
+                s.style.background = 'rgb(255, 255, 255)';
+        }
+    }
+</script>
+</body>
+
+</html>

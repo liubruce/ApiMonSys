@@ -13,6 +13,7 @@
         <tbody>
         <tr>
             <th style="width:6%;">任务编号</th><th style="width:15%;">任务名称</th><th style=" width:6%;">可用率</th><th style="width:10%;">正确率</th><th style=" width:20%;">执行时间</th>
+            <th style=" width:20%;">监测点</th>
         </tr>
         <% rows.forEach(function(oneRow){ %>
 
@@ -22,6 +23,7 @@
                 <td><%= oneRow.availrate*100 %></td>
                 <td><%= oneRow.correctrate*100 %></td>
                 <td><%= oneRow.create_time %></td>
+                <td><%= oneRow.monitorid %></td>
             </tr>
         <% }) %>
 

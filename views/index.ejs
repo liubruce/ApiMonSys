@@ -25,9 +25,10 @@
         <tr>
             <th style="width:6%;">任务编号</th><th style=" width:10%;">任务名称</th><th style="width:10%;">任务描述</th><th style=" width:5%;">频率</th>
             <th style="width:5%">API类别</th><th style="width:5%">API方法</th><th style="width:20%;">API URL</th>
-            <th style="width:5%">任务状态</th>
+            <th style="width:5%">方法名称</th>
+            <th style="width:5%">方法入参</th>
             <th style="width:10%">任务执行情况</th>
-            <th  style="width:6%">任务编辑</th><th  style="width:7%">删除任务</th>
+            <th  style="width:6%">任务编辑</th><th  style="width:7%">删除任务</th><th  style="width:7%">任务复制</th>
         </tr>
         <% for (i=0;i< rows.length;i++) { %>
         <form action="/edittask" method='get'>
@@ -41,15 +42,15 @@
                 <td><%= rows[i].api_type %></td>
                 <td><%= rows[i].api_method %></td>
                 <td><%= rows[i].api_url %></td>
-                <% if(schedule.scheduledJobs[rows[i].task_id]) { %>
-                <td> 执行中</td>
-                <% }else { %>
-                <td> 没有启动</td>
-                <% } %>
+                <td><%= rows[i].operationname %></td>
+                <td><%= rows[i].params %></td>
                 <td><%= newRows[i][0].createtime %>, <br>状态:<%= newRows[i][0].status %></td>
                 <td><input type="submit" value="修改"/></td>
                 <td>
                     <button type="button" onclick="javascript:delConfirm(<%= rows[i].task_id %>);">删除</button>
+                </td>
+                <td>
+                    <button type="button" onclick="javascript:window.location.href='/edittask?taskid=0&action=copy&task_name=<%= rows[i].task_name %>&task_desc=<%= rows[i].task_desc%>&api_method=<%=rows[i].api_method%>&api_url=<%=rows[i].api_url%>&operationname=<%=rows[i].operationname%>';">复制</button>
                 </td>
             </tr>
         </form>

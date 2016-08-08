@@ -234,7 +234,7 @@ function execGet(apiurl, taskid) {
                 var availrate = 1, correctrate = 1;
             } else{
 
-                var availrate = 0, correctrate = 0;
+                var availrate = 1, correctrate = 0;
 
                 writefaultdata(connection,currentTime,taskid, '状态码：' + res.statusCode,0);
 
@@ -242,36 +242,17 @@ function execGet(apiurl, taskid) {
 
             writeApiData(connection,currentTime,res.statusCode, responseTime, taskid, availrate, correctrate,0);
 
-            //schedule.job
-            //console.log(`Benchmark took ${diff[0] * 1e9 + diff[1]} nanoseconds`);
-            // benchmark took 1000000527 nanoseconds
-            //  },
-            //  1000);
 
-            // uncomment it for header details
-            //	console.log("headers: ", res.headers);
-
-/*
-            res.on('data', function (d) {
-                console.info('GET result:\n');
-                //process.stdout.write(d);
-                var diffdata = process.hrtime(time);
-                // [ 1, 552 ]
-                console.log('responseTime = ' + responseTime);
-                console.log('responseTime data = ' + ((diffdata[0] * 1e9 + diffdata[1]) / 1000000).toFixed(2));
-                console.info('\n\nCall completed');
-
-            });
-*/
         }); //.bind(null,connection,taskid)
 
-    reqGet.end();
+
     reqGet.on('error', function (e) {
             writeApiData(connection, currentTime,0, 0, taskid, 0, 0,0);
             writefaultdata(connection,currentTime,taskid, e.message,0);
-            console.error('网络问题:' + e.message + ' statuscode：'); // + res.statusCode);
+            //console.error('网络问题:' + e.message + ' statuscode：'); // + res.statusCode);
         }
     );
+    reqGet.end();
 
     log4js.debug("调用结束 " + taskid);
 
@@ -281,4 +262,5 @@ function execGet(apiurl, taskid) {
 module.exports.execGet = execGet;
 module.exports.createtablestr = createtablestr;
 module.exports.writeApiData = writeApiData;
+module.exports.writefaultdata = writefaultdata;
 

@@ -23,13 +23,14 @@ function searchMonitorRawData(req, res, apiflag, resultPage){
     if (!(typeof req.params.id === 'undefined'))
     {
         var taskidStr = (req.params.id).toUpperCase().replace(/.JSON/, "");
-        taskidStr = ' task_id=' + taskidStr + ' and ';
+        taskidStr = ' a.task_id=' + taskidStr + ' and ';
     }
 
-    console.log('taskidstr ' + taskidStr);
+    //console.log('taskidstr ' + taskidStr);
 
-    var selectStr = 'select response_time, task_id, availrate, correctrate,DATE_FORMAT(FROM_UNIXTIME(create_time/1000),' +
-        '"%Y-%m-%d %H:%i:%S") as create_time from apimonitordata' + pubfuncs.formatNow(new Date()) + '  where ' + taskidStr;
+    var selectStr = 'select a.response_time, a.task_id, b.task_name, a.availrate, a.correctrate,DATE_FORMAT(FROM_UNIXTIME(a.create_time/1000),' +
+        '"%Y-%m-%d %H:%i:%S") as create_time, a.monitorid from apimonitordata' + pubfuncs.formatNow(new Date()) +
+        ' a left join taskapiinfo b on a.task_id=b.task_id  where ' + taskidStr;
 
     if (((typeof req.query.start_date === 'undefined') && (typeof req.query.end_date === 'undefined'))) {
         var currentDate = pubfuncs.getDateYMD(new Date(), ' 0:0:0')
@@ -38,10 +39,10 @@ function searchMonitorRawData(req, res, apiflag, resultPage){
         //console.log(currentDate);
         currentDate = currentDate.getTime();
         //console.log(currentDate);
-        selectStr = selectStr + '  create_time>=' + currentDate;
+        selectStr = selectStr + '  a.create_time>=' + currentDate;
         //console.log(selectStr);
         connection.query(selectStr, function (err, rows, fields) {
-            if (err) res.json(err);
+            if (err) res.json(err.message);
             else {
 
 
@@ -80,14 +81,15 @@ function searchMonitorRawData(req, res, apiflag, resultPage){
         }
         if (pubfuncs.formatNow(new Date(start_date)) === pubfuncs.formatNow(new Date(end_date))) {
 
-            var selectStr = 'select response_time, task_id, availrate, correctrate,DATE_FORMAT(FROM_UNIXTIME(create_time/1000),' +
-                '"%Y-%m-%d %H:%i:%S") as create_time from apimonitordata' + pubfuncs.formatNow(new Date(start_date)) + ' where ' +
+            var selectStr = 'select a.response_time, a.task_id,b.task_name, a.availrate, a.correctrate,DATE_FORMAT(FROM_UNIXTIME(a.create_time/1000),' +
+                '"%Y-%m-%d %H:%i:%S") as create_time, a.monitorid from apimonitordata' + pubfuncs.formatNow(new Date(start_date)) +
+                ' a left join taskapiinfo b on a.task_id=b.task_id where ' +
                 taskidStr;
 
-            selectStr = selectStr + '  create_time>=' + start_date + ' and create_time <=' + end_date;
+            selectStr = selectStr + '  a.create_time>=' + start_date + ' and a.create_time <=' + end_date;
 
             connection.query(selectStr, function (err, rows, fields) {
-                if (err) res.json(err);
+                if (err) res.json(err.message);
                 else {
                     if (rows.length > 0)
                         output(res,rows,apiflag);
@@ -98,6 +100,7 @@ function searchMonitorRawData(req, res, apiflag, resultPage){
         } else {
             var newRows = [];
             var datemax = Math.ceil((end_date - start_date) / (86400 * 1000));
+            if (datemax === 1) datemax = 2;
             //var caculateRows = 0;
             for (var i = 0; i < datemax; i++) {
                 var caculateDate = start_date + i * 86400 * 1000;
@@ -107,14 +110,15 @@ function searchMonitorRawData(req, res, apiflag, resultPage){
 
                 caculateEnd = (caculateEnd > end_date)  ? end_date : caculateEnd;
 
-                var selectStr = 'select response_time, status, task_id, availrate, correctrate,DATE_FORMAT(FROM_UNIXTIME(create_time/1000),' +
-                    '"%Y-%m-%d %H:%i:%S") as create_time from apimonitordata' + pubfuncs.formatNow(new Date(caculateDate)) + ' where '
+                var selectStr = 'select a.response_time, a.status, a.task_id, b.task_name, a.availrate, a.correctrate,DATE_FORMAT(FROM_UNIXTIME(a.create_time/1000),' +
+                    '"%Y-%m-%d %H:%i:%S") as create_time, a.monitorid from apimonitordata' + pubfuncs.formatNow(new Date(caculateDate)) +
+                    ' a left join taskapiinfo b on a.task_id=b.task_id where '
                  + taskidStr;
-                selectStr = selectStr + '  create_time>=' + caculateDate + ' and create_time <=' + caculateEnd;
+                selectStr = selectStr + '  a.create_time>=' + caculateDate + ' and a.create_time <=' + caculateEnd;
                 //  （caculateEnd > end_date ）? end_date : caculateEnd;
                 log4js.debug('select : ' +  selectStr);
                 connection.query(selectStr, function (err, rows, fields) {
-                    if (err) res.json(err);
+                    if (err) res.json(err.message);
                     else {
                         newRows.push(rows);
                         //caculateRows = caculateRows +1;

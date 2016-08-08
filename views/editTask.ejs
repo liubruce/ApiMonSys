@@ -12,6 +12,7 @@
 
     <form action="/edittask" method='post'>
         <input name="taskid" type="hidden" value=<%= rows[0].task_id %>>
+        <input name="monitorlength" type="hidden" value=<%= monitorrows.length %>>
         <label>任务名称</label>
         <input name="taskname" type="text" style="width:520px" value=<%= rows[0].task_name %>>
         <br/><br/>
@@ -27,6 +28,24 @@
         <br/><br/>
         <label>API URL</label>
         <input name="apiurl" type="text" style="width:520px" value=<%= rows[0].api_url %>>
+        <br/>
+        <label>API方法名</label>
+        <input name="operationname" type="text" style="width:520px" value=<%= rows[0].operationname %>>
+        <br/>
+        <label>API参数</label>
+        <input name="params" type="text" style="width:520px" value=<%= rows[0].params %>>
+        <br/>
+        <label>监测点选择</label>
+        <br/>
+
+        <%
+        for (i=0;i< monitorrows.length;i++) {
+            if (monitorrows[i].id === monitorrows[i].monitor_id){
+            %>
+        <input name="monitor" type="checkbox" value=<%= monitorrows[i].id %> checked="checked"> <%= monitorrows[i].monitor_name %>
+        <% }else{ %>
+        <input name="monitor" type="checkbox" value=<%= monitorrows[i].id %> > <%= monitorrows[i].monitor_name %>
+        <%}}%>
         <br/><br/>
         <label for="enable">启用</label>
         <% if (rows[0].status){ %>

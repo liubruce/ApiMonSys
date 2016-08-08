@@ -9,9 +9,9 @@ var log4js = require('../applog').logger;
 
 function createApiMonitorTable() {
     var date = new Date();
-    var time = date.getTime()/1000;//转换成秒； 我们再将其转换成日期格式的：
+    var time = date.getTime() / 1000;//转换成秒； 我们再将其转换成日期格式的：
 
-    var date = new Date( (time + 86400) * 1000 );//.转换成第二天
+    var date = new Date((time + 86400) * 1000);//.转换成第二天
 
     var dateStr = pubfunc.formatNow(date);
     //console.log(dateStr);
@@ -44,7 +44,7 @@ function taskconfig(schedule) {
     createJobforCreateTable(schedule);
 
     //global.tasks = [];
-    connection.query('select * from taskapiinfo', function (err, rows, fields) {
+    connection.query('select * from taskapiinfo where task_id in (select task_id from tasklinkmonitor where monitor_id=0)', function (err, rows, fields) {
         if (err) throw err;
         var startTime = 0;
         for (var i = 0; i < rows.length; i++) {
@@ -58,6 +58,9 @@ function taskconfig(schedule) {
             function exectask(apiurl, taskid) { //+ rows[i].frequency
                 callSoapApi.execGet(apiurl, taskid)
             }
+
+            if (rows[i].frequency === 0) continue;
+
 
             var times = [];
 
@@ -78,6 +81,7 @@ function taskconfig(schedule) {
                     exectask(apiurl, taskid)
                 }.bind(null, rows[i].task_id, rows[i].api_url));
 
+
             //j.jobid = rows[i].task_id;
 
             //global.tasks.push(j);
@@ -88,7 +92,6 @@ function taskconfig(schedule) {
         }
 
     });
-
 
 
     //connection.end();

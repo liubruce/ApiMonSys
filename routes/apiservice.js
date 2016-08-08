@@ -6,11 +6,9 @@ var pubfuncs = require('../service/pubfunctions');
 var callSoapApi = require('../taskschedule/callSoapApi');
 var log4js = require('../applog').logger;
 
-/* GET home page. */
 router.get('/open/taskLists.json', function (req, res, next) {
 
-    connection.query('select task_id, api_url,frequency,status,task_desc,task_name' +
-        ' from taskapiinfo', function (err, rows, fields) {
+    connection.query('select * from taskapiinfo', function (err, rows, fields) {
         if (err) throw res.json(err);
         //var success = '任务列表';
         //res.render('index', { title: success, schedule: schedule, rows: rows });
@@ -19,18 +17,39 @@ router.get('/open/taskLists.json', function (req, res, next) {
 
 });
 
+
+router.get('/open/taskLists/:monitorid', function (req, res, next) {
+
+    if (!(typeof req.params.monitorid === 'undefined')) {
+
+        var selectStr = 'select task_id, api_url,frequency,status,task_desc,task_name, api_method, operationname, params' +
+            ' from taskapiinfo where task_id in (select task_id from tasklinkmonitor where status=1 and monitor_id =' +
+            req.params.monitorid + ')'
+
+        connection.query(selectStr, function (err, rows, fields) {
+            if (err) throw res.json(err);
+            //var success = '任务列表';
+            //res.render('index', { title: success, schedule: schedule, rows: rows });
+            res.json(rows);
+        });
+    }
+});
+
 //v2/open/available/${task_id}.json
 
-router.post('/open/task/:id',function(req,res){
+router.post('/open/task/:id', function (req, res) {
     //console.log(req.body);
     //需要写入数据库
 
-    callSoapApi.writeApiData(connection,req.body.currentTime,req.body.statusCode, req.body.responseTime,
+    callSoapApi.writeApiData(connection, req.body.currentTime, req.body.statusCode, req.body.responseTime,
         req.body.taskid, req.body.availrate, req.body.correctrate, req.body.monitorid);
-
+    console.log('try to write fault data : ' + req.body.statusCode);
+    if (parseInt(req.body.statusCode) === 0) {
+        console.log('write fault data : ' + req.body.monitorid);
+        callSoapApi.writefaultdata(connection, req.body.currentTime, req.body.taskid, req.body.errormessage, req.body.monitorid);
+    }
     res.json('ok');
 });
-
 
 
 router.get('/open/taskFaultLists.json', function (req, res, next) {
@@ -45,6 +64,7 @@ router.get('/open/taskFaultLists.json', function (req, res, next) {
 
 });
 
+
 router.get('/open/taskFaultAggr.json', function (req, res, next) {
     var selectStr = 'select task_id, count(*) as faultnums from taskfaultinfo group by task_id';
 
@@ -57,6 +77,19 @@ router.get('/open/taskFaultAggr.json', function (req, res, next) {
 
 });
 
+router.get('/open/getmonitorid/:uuid', function (req, res, next) {
 
+    var selectStr = 'select id from monitorsite where uuid="' + req.params.uuid + '"';
+
+    console.log(selectStr);
+
+    connection.query(selectStr, function (err, rows, fields) {
+        if (err) throw res.json(err);
+        //var success = '任务列表';
+        //res.render('index', { title: success, schedule: schedule, rows: rows });
+        res.json(rows);
+    });
+
+});
 
 module.exports = router;

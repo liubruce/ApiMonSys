@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/styleedit.css'/>
+</head>
+
+<body>
+<div id="div1">
+    <h1 style="width:800px;"><%= title %></h1>
+
+
+    <form action="/editmonitor" method='post'>
+        <input name="monitorid" type="hidden" value=<%= rows[0].id %>>
+        <label>监测点名称</label>
+        <input name="monitorname" type="text" style="width:520px" value=<%= rows[0].monitor_name %>>
+        <br/><br/>
+        <label>监测点描述</label>
+        <input name="monitordesc" type="text" style="width:520px" value=<%= rows[0].monitor_desc %>> </input>
+        <br/><br/>
+        <label>UUID</label>
+        <input name="uuid" type="text" style="width:520px" value=<%= rows[0].uuid %> readonly> </input>
+
+        <br/><br/>
+        <input type="submit" value="保存"/>
+        <button type="button" onclick="javascript:window.location.href='/monitorlists';">取消</button>
+    </form>
+</div>
+</body>
+</html>
