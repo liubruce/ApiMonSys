@@ -170,6 +170,8 @@ function writeApiData(connection, currentTime, statusCode, responseTime, taskid,
         }
     );
     //GetData(client);
+    if (parseFloat(responseTime) >= 5000)
+        writefaultdata(connection, currentTime, taskid,'超时', monitorid)
 }
 
 function writefaultdata(connection, currentTime, taskid,errormessage, monitorid) {

@@ -4,6 +4,9 @@ var connection = require('../database/dbsource.js');
 var schedule = require('node-schedule');
 var callSoapApi = require('../taskschedule/callSoapApi');
 var log4js = require('../applog').logger;
+var qs = require('querystring');
+var http = require('http');
+var searchData = require('../service/searchData');
 
 /* GET users listing. */
 router.get('/', function (req, res, next) {
@@ -38,7 +41,7 @@ router.get('/', function (req, res, next) {
                     "task_id": 0,
                     "task_name": "",
                     "task_desc": "",
-                    "freqency": 0,
+                    "frequency": 0,
                     "api_type": "SOAP",
                     "api_method": "get",
                     "api_url": "",
@@ -65,7 +68,7 @@ router.get('/', function (req, res, next) {
                     "task_id": 0,
                     "task_name": req.query.task_name,
                     "task_desc": req.query.task_desc,
-                    "freqency": 0,
+                    "frequency": req.query.frequency,
                     "api_type": "SOAP",
                     "api_method": req.query.api_method,
                     "api_url": req.query.api_url,
@@ -74,6 +77,7 @@ router.get('/', function (req, res, next) {
                     "operationname": req.query.operationname,
                     "params": req.query.params
                 };
+                console.log(req.query);
                 var monitoridrows = [];
                 connection.query('select * from monitorsite', function (err, monitorrows, fields) {
                     res.render('editTask', {
@@ -104,9 +108,6 @@ router.post('/', function (req, res) {
 
     var monitorids = req.body.monitor;
 
-    console.log('monitorids = ' + monitorids);
-
-    console.log(req.body);
 //改 up
     if (req.body.taskid > 0) {
 
@@ -130,9 +131,10 @@ router.post('/', function (req, res) {
             log4js.debug('******************************');
             //增加监控
             //改变schedule信息
-            if (schedule.scheduledJobs[req.body.taskid.toString()])  schedule.cancelJob(req.body.taskid.toString());
-            linkTaskMonitor(req.body.taskid, req.body.monitor, req.body.apimethod, req.body.operationname, req.body.params);
-            newSchedule(req);
+            //if (schedule.scheduledJobs[req.body.taskid.toString()])  schedule.cancelJob(req.body.taskid.toString());
+            linkTaskMonitor(req.body.taskid, req.body.monitor, req.body.apiurl, req.body.apimethod, req.body.operationname,
+                req.body.params, req.body.status, req.body.frequency);
+            //newSchedule(req);
         });
         //res.send('修改完成！');
         res.redirect('/tasklists');
@@ -153,8 +155,9 @@ router.post('/', function (req, res) {
                 log4js.debug('Inserted: ' + results.affectedRows + ' row.');
                 log4js.debug('Id inserted: ' + results.insertId);
                 req.body.taskid = results.insertId;
-                linkTaskMonitor(req.body.taskid, req.body.monitor, req.body.apimethod, req.body.operationname, req.body.params);
-                newSchedule(req);
+                linkTaskMonitor(req.body.taskid, req.body.monitor, req.body.apiurl, req.body.apimethod, req.body.operationname,
+                    req.body.params, req.body.status, req.body.frequency);
+                //newSchedule(req);
             }
         );
         res.redirect('/tasklists');
@@ -162,87 +165,135 @@ router.post('/', function (req, res) {
 });
 
 
-function newSchedule(req) {
+function newSchedule(ifcancel, status, taskid, apiurl, frequency) {
 
-    if (typeof req.body.monitor === 'undefined') return;
-    var monitorarray = [];
-    monitorarray = req.body.monitor.toString().split(",");
-    //console.log('不可能吗：' + monitorarray);
-    for (i = 0; i < monitorarray.length; i++) {
-        if ((monitorarray[i] === '0') && (req.body.status == 1)) {
-            function exectask(apiurl, taskid) { //+ rows[i].frequency
-                callSoapApi.execGet(apiurl, taskid);
-            }
-
-            var startTime = 0;
-            var times = [];
-            if (parseInt(req.body.frequency) === 0) return;
-            for (var j = startTime; j <= 60; j = j + parseInt(req.body.frequency)) {
-
-                times.push(j)
-
-            }
-            var rule = new schedule.RecurrenceRule();
-            rule.minute = times;
-            startTime = startTime + 1;
-            if (startTime > 1) startTime = 0;
-
-            log4js.debug('times = ' + times);
-            var oneJob = schedule.scheduleJob(req.body.taskid.toString(), rule, //startTime.toString()+ '/' + rows[i].frequency + ' * * * * *'
-                function (taskid, apiurl) {
-                    exectask(apiurl, taskid, connection)
-                }.bind(null, req.body.taskid, req.body.apiurl));
-        }
+//    if (typeof req.body.monitor === 'undefined') return;
+    if (ifcancel === 1) {
+        if (schedule.scheduledJobs[taskid.toString()])  schedule.cancelJob(taskid.toString());
+        return;
     }
-//    if ('0' in monitorarray) console.log('可能吗：' + monitorarray);
 
+    if (status == 1) {
+        function exectask(apiurl, taskid) { //+ rows[i].frequency
+            callSoapApi.execGet(apiurl, taskid);
+        }
+
+        var startTime = 0;
+        var times = [];
+        if (parseInt(frequency) === 0) return;
+        for (var j = startTime; j <= 60; j = j + parseInt(frequency)) {
+
+            times.push(j)
+
+        }
+        var rule = new schedule.RecurrenceRule();
+        rule.minute = times;
+        startTime = startTime + 1;
+        if (startTime > 1) startTime = 0;
+
+        log4js.debug('times = ' + times);
+        var oneJob = schedule.scheduleJob(taskid.toString(), rule, //startTime.toString()+ '/' + rows[i].frequency + ' * * * * *'
+            function (taskid, apiurl) {
+                exectask(apiurl, taskid, connection)
+            }.bind(null, taskid, apiurl));
+    }
 
 }
 
+function ifInArray(monitors, monitorid){
 
-function linkTaskMonitor(taskid, monitorids,  api_method, operationname, params) {
-    if (typeof monitorids === 'undefined') return;
+    for (var i=0; i< monitors; i++){
+        if (parseInt(monitors[i]) === parseInt(monitorid)) return true;
+    }
+    return false;
+
+}
+
+function linkTaskMonitor(taskid, monitorids, apiurl, api_method, operationname, params, status, frequency) {
+
     var monitorarray = [];
-    monitorarray = monitorids.toString().split(",");
-    console.log('monitorarray ===' + monitorarray);
-    //var j = 0;
-    connection.query('delete from tasklinkmonitor where task_id =' + taskid);
-    for (i = 0; i < monitorarray.length; i++) {
+    var monitors = [];
+    var keepmonitors = [];
+    if (!(typeof monitorids === 'undefined')) {
+        monitors = monitorids.toString().split(",");
+    }
 
-        //console.log('monitorarray =' + monitorarray[i]);
-        connection.query('INSERT INTO tasklinkmonitor SET task_id = ?,monitor_id = ?', [taskid, monitorarray[i]],
-            function (error, results) {
-                if (error) {
-                    log4js.debug("Write tasklinmonitor 数据错误 Error: " + error.message);
-                    //connection.end();
-                    return;
+    connection.query('select monitor_id from tasklinkmonitor where task_id =' + taskid, function (error, rows) {
+        if (error) {
+            log4js.debug("select tasklinkmonitor 数据错误 Error: " + error.message);
+            //connection.end();
+            return;
+        }
+        //写程序
+        console.log('length=' + rows.length + 'monitors = '+ monitors);
+        if (rows.length > 0) {
+            for (var i = 0; i < rows.length; i++) {
+                if (ifInArray(monitors, rows[i].monitor_id ) == true) //保留和更新任务
+                {
+                    console.log('保留和更新任务'+ rows[i].monitor_id);
+                    monitorarray.push(rows[i].monitor_id);
+                    //keepmonitors.push(rows)
+                    updateMonitorTask(rows[i].monitor_id, apiurl, taskid, api_method, operationname, params, status, frequency, 0);
                 }
-                //console.log('INSERT INTO tasklinkmonitor SET task_id = %,monitor_id = %', [taskid, monitorarray[j]]);
-                log4js.debug('Inserted: ' + results.affectedRows + ' row.');
-                log4js.debug('Id inserted: ' + results.insertId);
-                //刷新监控点的任务
-                if (!(parseInt(monitorarray[i]) === 0)) {
-                    connection.query('select * from monitorsite where taskid=?,monitor_id=?', [taskid, monitorarray[i]],
-                    function(error, rows) {
+                else  //删除和取消任务
+                {
+                    console.log('删除'+ rows[i].monitor_id);
+                    connection.query('delete from tasklinkmonitor where task_id =' + taskid + ' and monitor_id=' + rows[i].monitor_id);
+                    updateMonitorTask(rows[i].monitor_id, apiurl, taskid, api_method, operationname, params, status, frequency, 1);
+
+                }
+            }
+        }//else monitorarray = monitorarray.concat(monitors);
+
+        for (var i = 0; i < monitors.length; i++) {
+            if (ifInArray(monitorarray, monitors[i]) === false) {
+                console.log('新增'+ monitors[i]);
+                //新增
+                connection.query('INSERT INTO tasklinkmonitor SET task_id = ?,monitor_id = ?', [taskid, monitors[i]],
+                    function (error, results) {
                         if (error) {
                             log4js.debug("Write tasklinmonitor 数据错误 Error: " + error.message);
                             //connection.end();
                             return;
                         }
-                        //写程序
-                        if (rows.length > 0){
-                            updateRemoteSchedule(rows[0].address, rows[0].port, taskid, api_method, operationname, params)
-                        }
+                        //console.log('INSERT INTO tasklinkmonitor SET task_id = %,monitor_id = %', [taskid, monitorarray[j]]);
+                        log4js.debug('Inserted: ' + results.affectedRows + ' row.');
+                        log4js.debug('Id inserted: ' + results.insertId);
                     });
-                    }
-                });
+                updateMonitorTask(monitors[i], apiurl, taskid, api_method, operationname, params, status, frequency, 0);
             }
+        }
+
+    });
 }
 
-function updateRemoteSchedule(address, port, apiurl, taskid, api_method, operationname, params) {
+function updateMonitorTask(monitor_id, apiurl, taskid, api_method, operationname, params, status, frequency, ifcancel) {
+    if (parseInt(monitor_id) === 0) {
+        newSchedule(ifcancel, status, taskid, apiurl, frequency);
+    } else {
+
+        var selectStr = 'select * from monitorsite where id=' + monitor_id;
+        console.log(selectStr);
+        connection.query(selectStr,
+            function (error, rows) {
+                if (error) {
+                    log4js.debug("select monitorsite 数据错误 Error: " + error.message);
+                    //connection.end();
+                    return;
+                }
+                //写程序
+                if (rows.length > 0) {
+                    updateRemoteSchedule(rows[0].address, rows[0].port, apiurl, taskid, api_method, operationname, params, status, frequency, ifcancel,monitor_id);
+                }
+            });
+    }
+}
+
+function updateRemoteSchedule(address, port, apiurl, taskid, api_method, operationname, params, status, frequency, ifcancel, monitor_id) {
 
     var post_data = {
-        apiurl: apiurl, taskid: taskid, api_method: api_method, operationname: operationname, params: params
+        apiurl: apiurl, taskid: taskid, api_method: api_method, operationname: operationname, params: params,
+        status: status, frequency: frequency, ifcancel: ifcancel
     };//这是需要提交的数据
 
     var content = qs.stringify(post_data);
@@ -250,33 +301,34 @@ function updateRemoteSchedule(address, port, apiurl, taskid, api_method, operati
     var options = {
         host: address,
         port: port,
-        path: '/v2/update/schedule/' + taskid + '.json',
+        path: '/v2/update/schedule/',
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Content-Length': content.length
         }
     };
-    // console.log("post options:\n", options);
-    // console.log("content:", content);
-    // console.log("\n");
 
+    //console.log(options);
     var req = http.request(options, function (res) {
-        //    console.log("statusCode: ", res.statusCode);
-        //    console.log("headers: ", res.headers);
         var _data = '';
         res.on('data', function (chunk) {
             _data += chunk;
         });
         res.on('end', function () {
             console.log("\n--->>\nresult:", _data)
+            searchData.updateMonitorStatus(1,'更新了任务ID=' + taskid, monitor_id);
         });
     });
 
     req.on('error', function (e) {
             //writeApiData(connection, currentTime,0, 0, taskid, 0, 0);
             //writefaultdata(connection,currentTime,taskid, e.message);
+
             console.error('网络问题:' + e.message); // + res.statusCode);
+
+            searchData.updateMonitorStatus(0,'监测点失联：' + e.message, monitor_id);
+
         }
     );
     req.write(content);
@@ -285,5 +337,6 @@ function updateRemoteSchedule(address, port, apiurl, taskid, api_method, operati
 
 
 }
+
 
 module.exports = router;

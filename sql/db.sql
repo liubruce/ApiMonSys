@@ -235,12 +235,17 @@ CREATE TABLE `monitorsite` (
   `uuid` varchar(50) DEFAULT NULL,
   `monitor_name` varchar(80) NOT NULL,
   `monitor_desc` varchar(200) NOT NULL,
-  `status` varchar(30) ,
+  `status` tinyint(4) DEFAULT NULL,
+  `status_msg` varchar(150) DEFAULT NULL
   `heartbeat_time` bigint(20),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8;
 alter table monitorsite add column address varchar(50);
 alter table monitorsite add column port varchar(10);
+alter table monitorsite modify column status tinyint(4);
+alter table monitorsite add column status_msg varchar(150);
+
+
 
 DROP TABLE IF EXISTS `tasklinkmonitor`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

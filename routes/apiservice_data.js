@@ -16,6 +16,17 @@ router.get('/open/alltask', function (req, res, next) {
 
 });
 
+router.get('/open/alltaskbyapp', function (req, res, next) {
+    if (typeof req.query.app_id === 'undefined')
+    {
+        res.json('请输入业务系统编号！');
+    }
+
+    searchData.searchMonitorRawData(req, res, 'API', 'JSON', req.query.app_id);
+
+});
+
+
 router.get('/open/taskhour/:id', function (req, res, next) {
 
     searchData.searchMonitorData(req, res, 'hour');

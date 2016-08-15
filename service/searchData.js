@@ -7,7 +7,7 @@ var pubfuncs = require('../service/pubfunctions');
 var callSoapApi = require('../taskschedule/callSoapApi');
 var log4js = require('../applog').logger;
 
-function searchMonitorRawData(req, res, apiflag, resultPage){
+function searchMonitorRawData(req, res, apiflag, resultPage, app_id){
 
     function output(res, result, apiflag){
         if (apiflag === 'API')
@@ -26,7 +26,10 @@ function searchMonitorRawData(req, res, apiflag, resultPage){
         taskidStr = ' a.task_id=' + taskidStr + ' and ';
     }
 
-    //console.log('taskidstr ' + taskidStr);
+    if (app_id) taskidStr = taskidStr + ' a.task_id in (select task_id from taskapiinfo where application_id=' + app_id + ' ) and ';
+
+
+    console.log('taskidstr ' + taskidStr + ' ' + app_id);
 
     var selectStr = 'select a.response_time, a.task_id, b.task_name, a.availrate, a.correctrate,DATE_FORMAT(FROM_UNIXTIME(a.create_time/1000),' +
         '"%Y-%m-%d %H:%i:%S") as create_time, a.monitorid from apimonitordata' + pubfuncs.formatNow(new Date()) +
@@ -259,5 +262,21 @@ function searchMonitorData(req, res, flagStr) {
 }
 
 
+function updateMonitorStatus(status,status_msg, monitorid){
+    var updateStr = 'update monitorsite SET status=' + status + ', status_msg = "' + status_msg + '", heartbeat_time = ' + new Date().getTime() +
+        ' where id=' + monitorid;
+    //console.log(updateStr);
+    connection.query(updateStr,
+        function (error, results) {
+            if (error) {
+                log4js.debug("update monitorsite 数据错误 Error: " + error.message);
+                return;
+            }
+            log4js.debug('Updated: ' + results.affectedRows + ' row.');
+        });
+}
+
+
 module.exports.searchMonitorData = searchMonitorData;
 module.exports.searchMonitorRawData = searchMonitorRawData;
+module.exports.updateMonitorStatus= updateMonitorStatus;

@@ -50,7 +50,7 @@
                     <button type="button" onclick="javascript:delConfirm(<%= rows[i].task_id %>);">删除</button>
                 </td>
                 <td>
-                    <button type="button" onclick="javascript:window.location.href='/edittask?taskid=0&action=copy&task_name=<%= rows[i].task_name %>&task_desc=<%= rows[i].task_desc%>&api_method=<%=rows[i].api_method%>&api_url=<%=rows[i].api_url%>&operationname=<%=rows[i].operationname%>';">复制</button>
+                    <button type="button" onclick="javascript:window.location.href='/edittask?taskid=0&action=copy&task_name=<%= rows[i].task_name %>&task_desc=<%= rows[i].task_desc%>&api_method=<%=rows[i].api_method%>&api_url=<%=rows[i].api_url%>&operationname=<%=rows[i].operationname%>&params=<%=rows[i].params%>&frequency=<%=rows[i].frequency%>';">复制</button>
                 </td>
             </tr>
         </form>

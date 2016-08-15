@@ -17,6 +17,16 @@ router.get('/open/taskLists.json', function (req, res, next) {
 
 });
 
+router.get('/open/applists.json', function (req, res, next) {
+
+    connection.query('select * from application', function (err, rows, fields) {
+        if (err) throw res.json(err);
+        //var success = '任务列表';
+        //res.render('index', { title: success, schedule: schedule, rows: rows });
+        res.json(rows);
+    });
+
+});
 
 router.get('/open/taskLists/:monitorid', function (req, res, next) {
 
@@ -43,9 +53,9 @@ router.post('/open/task/:id', function (req, res) {
 
     callSoapApi.writeApiData(connection, req.body.currentTime, req.body.statusCode, req.body.responseTime,
         req.body.taskid, req.body.availrate, req.body.correctrate, req.body.monitorid);
-    console.log('try to write fault data : ' + req.body.statusCode);
+    //console.log('try to write fault data : ' + req.body.statusCode);
     if (parseInt(req.body.statusCode) === 0) {
-        console.log('write fault data : ' + req.body.monitorid);
+        //console.log('write fault data : ' + req.body.monitorid);
         callSoapApi.writefaultdata(connection, req.body.currentTime, req.body.taskid, req.body.errormessage, req.body.monitorid);
     }
     res.json('ok');
@@ -91,5 +101,6 @@ router.get('/open/getmonitorid/:uuid', function (req, res, next) {
     });
 
 });
+
 
 module.exports = router;

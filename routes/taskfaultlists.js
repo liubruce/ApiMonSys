@@ -46,10 +46,7 @@ router.get('/', function(req, res, next) {
 
                 if (newRows.length === rows.length)
                 {
-                   // res.json(newRows);
-                    //console.log(newRows[0][0].faulttime);
-                    //console.log(fields);
-                    //console.log(rows);
+
                     res.render('taskfaultAggr', {title: success, rows: rows, faultRows: newRows});
                 }
 
